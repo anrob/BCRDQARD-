@@ -2,8 +2,12 @@ import { db } from '@/lib/firebase/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { notFound } from 'next/navigation';
 import CardDisplay from './CardDisplay';
+import { BusinessCard } from '@/lib/firebase/businessCardUtils';
 
-async function getCardBySlug(slug: string) {
+// Type for the card data returned by getCardBySlug
+type CardData = Omit<BusinessCard, 'userId'>;
+
+async function getCardBySlug(slug: string): Promise<CardData | null> {
   const q = query(
     collection(db, 'businessCards'),
     where('urlSlug', '==', slug)
@@ -19,20 +23,39 @@ async function getCardBySlug(slug: string) {
   
   return {
     id: doc.id,
-    ...data,
-    createdAt: data.createdAt?.toDate(),
-    updatedAt: data.updatedAt?.toDate(),
+    businessName: data.businessName || '',
+    businessDescription: data.businessDescription || '',
+    phoneNumber: data.phoneNumber || '',
+    email: data.email || '',
+    address: data.address || '',
+    website: data.website || '',
+    heroImage: data.heroImage || '',
+    urlSlug: data.urlSlug || '',
+    keywords: data.keywords || [],
+    createdAt: data.createdAt?.toDate() || new Date(),
+    updatedAt: data.updatedAt?.toDate() || new Date(),
   };
 }
 
-export default async function PublicCard({ 
-  params 
-}: { 
-  params: Promise<{ slug: string }> | { slug: string } 
-}) {
-  // Await the params
-  const resolvedParams = await Promise.resolve(params);
-  const card = await getCardBySlug(resolvedParams.slug);
+// Update the Props type to match Next.js 14 App Router requirements
+type Props = {
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+// Add metadata export for Next.js App Router
+export const metadata = {
+  title: 'Business Card',
+  description: 'View business card details',
+};
+
+export default async function CardPage({
+  params,
+  searchParams,
+}: Props) {
+  const { slug } = params;
+  
+  const card = await getCardBySlug(slug);
 
   if (!card) {
     notFound();
