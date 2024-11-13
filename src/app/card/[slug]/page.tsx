@@ -25,8 +25,14 @@ async function getCardBySlug(slug: string) {
   };
 }
 
-export default async function PublicCard({ params }: { params: { slug: string } }) {
-  const card = await getCardBySlug(params.slug);
+export default async function PublicCard({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> | { slug: string } 
+}) {
+  // Await the params
+  const resolvedParams = await Promise.resolve(params);
+  const card = await getCardBySlug(resolvedParams.slug);
 
   if (!card) {
     notFound();

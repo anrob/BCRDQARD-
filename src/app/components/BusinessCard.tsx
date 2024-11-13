@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { QRCodeSVG } from 'qrcode.react';
 import { saveBusinessCard, updateBusinessCard, getUserBusinessCards, type BusinessCard as BusinessCardType } from '@/lib/firebase/businessCardUtils';
 
 export default function BusinessCard() {
@@ -20,6 +21,7 @@ export default function BusinessCard() {
     createdAt: new Date(),
     updatedAt: new Date()
   });
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -50,6 +52,12 @@ export default function BusinessCard() {
 
     loadData();
   }, [user]);
+
+  useEffect(() => {
+    if (cardData.urlSlug) {
+      setQrCodeUrl(`${window.location.origin}/card/${cardData.urlSlug}`);
+    }
+  }, [cardData.urlSlug]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,183 +111,205 @@ export default function BusinessCard() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="w-full bg-blue-600 text-white px-6 py-3 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold">Business Card</h1>
-        </div>
-        <div className="flex items-center space-x-2">
-          {cardData.id && cardData.urlSlug && (  // Check for both id and urlSlug
-            <a
-              href={`/card/${cardData.urlSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
+    <div className="max-w-md mx-auto">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div className="w-full bg-blue-600 text-white px-6 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-bold">Business Card</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            {cardData.id && cardData.urlSlug && (  // Check for both id and urlSlug
+              <a
+                href={`/card/${cardData.urlSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+              >
+                Live URL
+              </a>
+            )}
+            <button
+              onClick={() => setIsEditing(!isEditing)}
               className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
             >
-              Live URL
-            </a>
+              {isEditing ? 'Cancel' : 'Edit Card'}
+            </button>
+          </div>
+        </div>
+
+        <div className="relative w-full h-48">
+          {cardData.heroImage ? (
+            <img
+              src={cardData.heroImage}
+              alt="Business hero"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">No image uploaded</span>
+            </div>
           )}
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-          >
-            {isEditing ? 'Cancel' : 'Edit Card'}
-          </button>
+          
+          {isEditing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 bg-white rounded-md text-gray-800 hover:bg-gray-100 transition-colors"
+              >
+                {cardData.heroImage ? 'Change Image' : 'Upload Image'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="p-6">
+          {isEditing ? (
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Business Name</label>
+                <input
+                  type="text"
+                  value={cardData.businessName}
+                  onChange={(e) => setCardData({ ...cardData, businessName: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter business name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Business Description</label>
+                <textarea
+                  value={cardData.businessDescription}
+                  onChange={(e) => setCardData({ ...cardData, businessDescription: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter a brief business description"
+                  maxLength={250}
+                  rows={3}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  {(cardData.businessDescription?.length || 0)}/250 characters
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  value={cardData.phoneNumber}
+                  onChange={(e) => setCardData({ ...cardData, phoneNumber: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={cardData.email}
+                  onChange={(e) => setCardData({ ...cardData, email: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter email"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  value={cardData.address}
+                  onChange={(e) => setCardData({ ...cardData, address: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter address"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Website</label>
+                <input
+                  type="url"
+                  value={cardData.website}
+                  onChange={(e) => setCardData({ ...cardData, website: e.target.value })}
+                  className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter website URL"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <span className="text-xl font-semibold">{cardData.businessName}</span>
+                {cardData.businessDescription && (
+                  <p className="text-gray-600">{cardData.businessDescription}</p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <span>📞</span>
+                <span>{cardData.phoneNumber}</span>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <span>✉️</span>
+                <span>{cardData.email}</span>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <span>📍</span>
+                <span>{cardData.address}</span>
+              </div>
+
+              {cardData.website && (
+                <div className="flex items-center space-x-3">
+                  <span>🌐</span>
+                  <a 
+                    href={cardData.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {cardData.website}
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="relative w-full h-48">
-        {cardData.heroImage ? (
-          <img
-            src={cardData.heroImage}
-            alt="Business hero"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No image uploaded</span>
-          </div>
-        )}
-        
-        {isEditing && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-white rounded-md text-gray-800 hover:bg-gray-100 transition-colors"
-            >
-              {cardData.heroImage ? 'Change Image' : 'Upload Image'}
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="p-6">
-        {isEditing ? (
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Business Name</label>
-              <input
-                type="text"
-                value={cardData.businessName}
-                onChange={(e) => setCardData({ ...cardData, businessName: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter business name"
+      {!isEditing && cardData.id && cardData.urlSlug && (
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6 text-center">
+          <h2 className="text-lg font-semibold mb-4">Share your business card</h2>
+          <div className="flex justify-center">
+            {qrCodeUrl && (
+              <QRCodeSVG
+                value={qrCodeUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                className="mx-auto"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Business Description</label>
-              <textarea
-                value={cardData.businessDescription}
-                onChange={(e) => setCardData({ ...cardData, businessDescription: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter a brief business description"
-                maxLength={250}
-                rows={3}
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                {(cardData.businessDescription?.length || 0)}/250 characters
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input
-                type="tel"
-                value={cardData.phoneNumber}
-                onChange={(e) => setCardData({ ...cardData, phoneNumber: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter phone number"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                value={cardData.email}
-                onChange={(e) => setCardData({ ...cardData, email: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter email"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Address</label>
-              <input
-                type="text"
-                value={cardData.address}
-                onChange={(e) => setCardData({ ...cardData, address: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter address"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Website</label>
-              <input
-                type="url"
-                value={cardData.website}
-                onChange={(e) => setCardData({ ...cardData, website: e.target.value })}
-                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter website URL"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Save Changes
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex flex-col space-y-2">
-              <span className="text-xl font-semibold">{cardData.businessName}</span>
-              {cardData.businessDescription && (
-                <p className="text-gray-600">{cardData.businessDescription}</p>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <span>📞</span>
-              <span>{cardData.phoneNumber}</span>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <span>✉️</span>
-              <span>{cardData.email}</span>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <span>📍</span>
-              <span>{cardData.address}</span>
-            </div>
-
-            {cardData.website && (
-              <div className="flex items-center space-x-3">
-                <span>🌐</span>
-                <a 
-                  href={cardData.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {cardData.website}
-                </a>
-              </div>
             )}
           </div>
-        )}
-      </div>
+          <p className="mt-4 text-sm text-gray-600">
+            Scan this QR code to view your business card on any device
+          </p>
+        </div>
+      )}
     </div>
   );
 } 
