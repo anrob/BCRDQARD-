@@ -5,10 +5,17 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { QRCodeSVG } from 'qrcode.react';
 import { saveBusinessCard, updateBusinessCard, getUserBusinessCards, type BusinessCard as BusinessCardType } from '@/lib/firebase/businessCardUtils';
 
-export default function BusinessCard() {
+interface BusinessCardProps {
+  selectedCardId: string | null;
+  onCardSelect: (cardId: string | null) => void;
+  hideSelector?: boolean;
+}
+
+export default function BusinessCard({ selectedCardId, onCardSelect, hideSelector = false }: BusinessCardProps) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [allCards, setAllCards] = useState<BusinessCardType[]>([]);
   const [cardData, setCardData] = useState<BusinessCardType>({
     businessName: '',
     businessDescription: '',
@@ -26,25 +33,61 @@ export default function BusinessCard() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Load card data when component mounts or user changes
+  // Load all cards when component mounts or user changes
   useEffect(() => {
     const loadData = async () => {
       if (user) {
         setIsLoading(true);
         try {
           const cards = await getUserBusinessCards(user.uid);
-          if (cards.length > 0) {
+          setAllCards(cards);
+          
+          if (selectedCardId) {
+            const selectedCard = cards.find(card => card.id === selectedCardId);
+            if (selectedCard) {
+              setCardData(selectedCard);
+            } else {
+              // If selected card not found in current user's cards, reset selection
+              setCardData({
+                businessName: '',
+                businessDescription: '',
+                phoneNumber: '',
+                email: '',
+                address: '',
+                website: '',
+                heroImage: '',
+                userId: user.uid,
+                urlSlug: `card-${Math.random().toString(36).substr(2, 6)}`,
+                keywords: [],
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+              onCardSelect(null);
+            }
+          } else if (cards.length > 0) {
+            // If no card selected but cards exist, select the first one
             setCardData(cards[0]);
+            onCardSelect(cards[0].id!);
           } else {
-            // If no card exists, initialize with user ID and generate a urlSlug
-            setCardData(prev => ({
-              ...prev,
+            // If no cards exist, initialize new card
+            setCardData({
+              businessName: '',
+              businessDescription: '',
+              phoneNumber: '',
+              email: '',
+              address: '',
+              website: '',
+              heroImage: '',
               userId: user.uid,
-              urlSlug: `card-${Math.random().toString(36).substr(2, 6)}` // Default slug
-            }));
+              urlSlug: `card-${Math.random().toString(36).substr(2, 6)}`,
+              keywords: [],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            setIsEditing(true);
           }
         } catch (error) {
-          console.error('Error loading business card:', error);
+          console.error('Error loading business cards:', error);
         } finally {
           setIsLoading(false);
         }
@@ -52,7 +95,7 @@ export default function BusinessCard() {
     };
 
     loadData();
-  }, [user]);
+  }, [user, selectedCardId, onCardSelect]);
 
   useEffect(() => {
     if (cardData.urlSlug) {
@@ -148,8 +191,27 @@ export default function BusinessCard() {
     }));
   };
 
+  // Add card selector to the UI
   return (
     <div className="max-w-md mx-auto">
+      {!hideSelector && allCards.length > 0 && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Select Card</label>
+          <select
+            value={selectedCardId || ''}
+            onChange={(e) => onCardSelect(e.target.value || null)}
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a card</option>
+            {allCards.map((card) => (
+              <option key={card.id} value={card.id}>
+                {card.businessName || 'Untitled Card'}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
         <div className="w-full bg-blue-600 text-white px-6 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-4">
