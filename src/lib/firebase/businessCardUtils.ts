@@ -21,6 +21,7 @@ export interface BusinessCard {
   heroImage?: string;
   userId: string;
   urlSlug?: string;
+  keywords?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +39,7 @@ const prepareDataForFirestore = (data: any) => {
     heroImage: data.heroImage || '',
     userId: data.userId,
     urlSlug: data.urlSlug || generateUrlSlug(data.businessName),
+    keywords: data.keywords || [],
     updatedAt: Timestamp.fromDate(new Date())
   };
 
@@ -110,6 +112,7 @@ export const getUserBusinessCards = async (userId: string) => {
         heroImage: data.heroImage || '',
         userId: data.userId,
         urlSlug: data.urlSlug || '',
+        keywords: data.keywords || [],
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       };

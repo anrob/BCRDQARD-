@@ -22,6 +22,7 @@ export default function BusinessCard() {
     updatedAt: new Date()
   });
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [newKeyword, setNewKeyword] = useState('');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -110,6 +111,43 @@ export default function BusinessCard() {
     }
   };
 
+  // Update keyword handler to handle Enter key
+  const handleKeywordInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddKeyword(e);
+    }
+  };
+
+  // Modified Add keyword handler
+  const handleAddKeyword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newKeyword.trim()) return;
+    
+    if (!cardData.keywords) {
+      cardData.keywords = [];
+    }
+    
+    if (cardData.keywords.length >= 3) { // Changed from 4 to 3
+      alert('Maximum 3 keywords allowed');
+      return;
+    }
+
+    setCardData(prev => ({
+      ...prev,
+      keywords: [...(prev.keywords || []), newKeyword.trim()]
+    }));
+    setNewKeyword('');
+  };
+
+  // Remove keyword handler
+  const handleRemoveKeyword = (keywordToRemove: string) => {
+    setCardData(prev => ({
+      ...prev,
+      keywords: (prev.keywords || []).filter(k => k !== keywordToRemove)
+    }));
+  };
+
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
@@ -184,6 +222,46 @@ export default function BusinessCard() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700">Keywords (max 3)</label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {cardData.keywords?.map((keyword) => (
+                    <span
+                      key={keyword}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700"
+                    >
+                      {keyword}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveKeyword(keyword)}
+                        className="ml-2 text-blue-600 hover:text-blue-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {(cardData.keywords?.length || 0) < 3 && ( // Changed from 4 to 3
+                  <div className="mt-2 flex">
+                    <input
+                      type="text"
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      onKeyDown={handleKeywordInputKeyDown} // Add this line
+                      className="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Add a keyword and press Enter"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddKeyword}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700">Business Description</label>
                 <textarea
                   value={cardData.businessDescription}
@@ -253,6 +331,18 @@ export default function BusinessCard() {
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <span className="text-xl font-semibold">{cardData.businessName}</span>
+                {cardData.keywords && cardData.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {cardData.keywords.map((keyword) => (
+                      <span
+                        key={keyword}
+                        className="px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {cardData.businessDescription && (
                   <p className="text-gray-600">{cardData.businessDescription}</p>
                 )}

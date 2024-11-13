@@ -13,6 +13,7 @@ interface CardDisplayProps {
     website?: string;
     heroImage?: string;
     urlSlug?: string;
+    keywords?: string[];
   };
 }
 
@@ -59,6 +60,18 @@ export default function CardDisplay({ card }: CardDisplayProps) {
           <div className="p-6 space-y-4">
             <div className="flex flex-col space-y-2">
               <h1 className="text-xl font-semibold">{card.businessName}</h1>
+              {card.keywords && card.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {card.keywords.map((keyword) => (
+                    <span
+                      key={keyword}
+                      className="px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              )}
               {card.businessDescription && (
                 <p className="text-gray-600">{card.businessDescription}</p>
               )}
