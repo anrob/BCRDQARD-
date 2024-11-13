@@ -10,6 +10,7 @@ export default function BusinessCard() {
   const [isLoading, setIsLoading] = useState(true);
   const [cardData, setCardData] = useState<BusinessCardType>({
     businessName: '',
+    businessDescription: '',
     phoneNumber: '',
     email: '',
     address: '',
@@ -161,6 +162,21 @@ export default function BusinessCard() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700">Business Description</label>
+              <textarea
+                value={cardData.businessDescription}
+                onChange={(e) => setCardData({ ...cardData, businessDescription: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter a brief business description"
+                maxLength={250}
+                rows={3}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                {(cardData.businessDescription?.length || 0)}/250 characters
+              </p>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700">Phone Number</label>
               <input
                 type="tel"
@@ -213,8 +229,11 @@ export default function BusinessCard() {
           </form>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-col space-y-2">
               <span className="text-xl font-semibold">{cardData.businessName}</span>
+              {cardData.businessDescription && (
+                <p className="text-gray-600">{cardData.businessDescription}</p>
+              )}
             </div>
 
             <div className="flex items-center space-x-3">

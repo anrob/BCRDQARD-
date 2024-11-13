@@ -13,6 +13,7 @@ import {
 export interface BusinessCard {
   id?: string;
   businessName: string;
+  businessDescription?: string;
   phoneNumber: string;
   email: string;
   address: string;
@@ -28,6 +29,7 @@ const prepareDataForFirestore = (data: any) => {
   // Create a new object with only the fields we want to store
   const prepared = {
     businessName: data.businessName || '',
+    businessDescription: data.businessDescription || '',
     phoneNumber: data.phoneNumber || '',
     email: data.email || '',
     address: data.address || '',
@@ -98,6 +100,7 @@ export const getUserBusinessCards = async (userId: string) => {
       return {
         id: doc.id,
         businessName: data.businessName || '',
+        businessDescription: data.businessDescription || '',
         phoneNumber: data.phoneNumber || '',
         email: data.email || '',
         address: data.address || '',
