@@ -33,10 +33,11 @@ export default function BusinessCard() {
           if (cards.length > 0) {
             setCardData(cards[0]);
           } else {
-            // If no card exists, initialize with user ID
+            // If no card exists, initialize with user ID and generate a urlSlug
             setCardData(prev => ({
               ...prev,
-              userId: user.uid
+              userId: user.uid,
+              urlSlug: `card-${Math.random().toString(36).substr(2, 6)}` // Default slug
             }));
           }
         } catch (error) {
@@ -107,12 +108,24 @@ export default function BusinessCard() {
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold">Business Card</h1>
         </div>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-        >
-          {isEditing ? 'Cancel' : 'Edit Card'}
-        </button>
+        <div className="flex items-center space-x-2">
+          {cardData.id && cardData.urlSlug && (  // Check for both id and urlSlug
+            <a
+              href={`/card/${cardData.urlSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              Live URL
+            </a>
+          )}
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+          >
+            {isEditing ? 'Cancel' : 'Edit Card'}
+          </button>
+        </div>
       </div>
 
       <div className="relative w-full h-48">

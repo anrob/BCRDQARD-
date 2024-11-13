@@ -20,6 +20,7 @@ export interface BusinessCard {
   website: string;
   heroImage?: string;
   userId: string;
+  urlSlug?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ const prepareDataForFirestore = (data: any) => {
     website: data.website || '',
     heroImage: data.heroImage || '',
     userId: data.userId,
+    urlSlug: data.urlSlug || generateUrlSlug(data.businessName),
     updatedAt: Timestamp.fromDate(new Date())
   };
 
@@ -107,6 +109,7 @@ export const getUserBusinessCards = async (userId: string) => {
         website: data.website || '',
         heroImage: data.heroImage || '',
         userId: data.userId,
+        urlSlug: data.urlSlug || '',
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       };
@@ -116,4 +119,12 @@ export const getUserBusinessCards = async (userId: string) => {
     console.error('Error getting business cards:', error);
     throw error;
   }
+};
+
+const generateUrlSlug = (businessName: string): string => {
+  const slug = businessName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+  return `${slug}-${Math.random().toString(36).substr(2, 6)}`;
 }; 
