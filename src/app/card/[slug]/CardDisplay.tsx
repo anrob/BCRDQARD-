@@ -44,7 +44,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-gray-100">
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {card.heroImage && (
@@ -109,7 +109,7 @@ export default function CardDisplay({ card }: CardDisplayProps) {
             <div className="pt-4">
               <button
                 onClick={handleDownloadVCard}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
               >
                 <span>📇</span>
                 <span>Save Contact Information</span>
