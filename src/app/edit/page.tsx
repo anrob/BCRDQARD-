@@ -3,14 +3,19 @@
 import { useAuth } from '@/lib/hooks/useAuth';
 import BusinessCard from '../components/BusinessCard';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import Link from 'next/link';
 
-export default function EditCard() {
-  const { user, loading, signOut } = useAuth();
-  const router = useRouter();
+// Separate component for handling search params
+function BusinessCardWrapper() {
   const searchParams = useSearchParams();
   const cardId = searchParams.get('id');
+  return <BusinessCard selectedCardId={cardId} onCardSelect={() => {}} hideSelector />;
+}
+
+function EditCardContent() {
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -66,8 +71,26 @@ export default function EditCard() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto py-12 px-4">
-        <BusinessCard selectedCardId={cardId} onCardSelect={() => {}} hideSelector />
+        <Suspense fallback={
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          </div>
+        }>
+          <BusinessCardWrapper />
+        </Suspense>
       </div>
     </main>
+  );
+}
+
+export default function EditCard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <EditCardContent />
+    </Suspense>
   );
 } 
