@@ -37,13 +37,11 @@ async function getCardBySlug(slug: string): Promise<CardData | null> {
   };
 }
 
-// Correct the Props type to match Next.js expectations
-interface Props {
-  params: {
-    slug: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
+// Update the Props type to match Next.js 14 App Router requirements
+type Props = {
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 // Add metadata export for Next.js App Router
 export const metadata = {
